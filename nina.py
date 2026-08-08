@@ -7,19 +7,19 @@ import sys
 import argparse
 import edge_tts
 
-VOICES = {
-    "aria":      "en-US-AriaNeural",
-    "guy":       "en-US-GuyNeural",
-    "jenny":     "en-US-JennyNeural",
-    "libby":     "en-GB-LibbyNeural",
-    "ryan":      "en-GB-RyanNeural",
-    "sonia":     "en-GB-SoniaNeural",
-    "natasha":   "en-AU-NatashaNeural",
-    "william":   "en-AU-WilliamNeural",
-    "andrew":    "en-US-AndrewNeural",
-    "ava":       "en-US-AvaNeural",
-    "brian":     "en-US-BrianNeural",
-    "emma":      "en-US-EmmaNeural",
+VOICE_SHORTCUTS = {
+    "aria":    "en-US-AriaNeural",
+    "guy":     "en-US-GuyNeural",
+    "jenny":   "en-US-JennyNeural",
+    "libby":   "en-GB-LibbyNeural",
+    "ryan":    "en-GB-RyanNeural",
+    "sonia":   "en-GB-SoniaNeural",
+    "natasha": "en-AU-NatashaNeural",
+    "william": "en-AU-WilliamNeural",
+    "andrew":  "en-US-AndrewNeural",
+    "ava":     "en-US-AvaNeural",
+    "brian":   "en-US-BrianNeural",
+    "emma":    "en-US-EmmaNeural",
 }
 
 
