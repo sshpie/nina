@@ -128,7 +128,7 @@ For browsers without extension support, copy `bookmarklet.txt` and save it as a 
 
 | Package | Purpose |
 |---------|---------|
-| `edge-tts` | Neural TTS audio streaming |
+| `edge-tts` | Neural speech synthesis streaming |
 | `mpv` | Audio playback |
 | `pypdf` | PDF text extraction |
 | `ebooklib` | EPUB parsing |
@@ -143,6 +143,6 @@ pip install pypdf ebooklib beautifulsoup4
 
 ## How it works
 
-The CLI and GUI use `edge-tts`, an open source Python library that streams neural speech synthesis audio. Text is sent to a publicly accessible TTS endpoint and the audio stream is piped directly to `mpv` — no API key, no account, no browser required.
+The CLI and GUI stream neural speech synthesis audio using an open source Python library (`edge-tts`). Text is sent to a publicly accessible TTS endpoint and the audio is piped directly to `mpv` — no API key, no account, no browser required.
 
 The browser extension and bookmarklet use the Web Speech API built into Chromium browsers for in-page reading.

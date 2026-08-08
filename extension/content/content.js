@@ -140,7 +140,7 @@
     voiceSel.innerHTML = '';
     allVoices.forEach((v, i) => {
       const display = v.name
-        .replace(/^Microsoft /, '')
+        .replace(/^(?:Microsoft|Google) /, '')
         .replace(/ Online$/, '')
         .replace(/ \(Natural\)$/, '')
         .replace(/ - .+/, '');
@@ -252,7 +252,7 @@
   chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     if (msg.action === 'getVoices') {
       const names = allVoices.map(v =>
-        v.name.replace(/^Microsoft /, '').replace(/ Online$/, '').replace(/ \(Natural\)$/, '').replace(/ - .+/, '')
+        v.name.replace(/^(?:Microsoft|Google) /, '').replace(/ Online$/, '').replace(/ \(Natural\)$/, '').replace(/ - .+/, '')
       );
       sendResponse({ voices: names });
     }
