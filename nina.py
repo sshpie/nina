@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""nina — read text aloud using Microsoft Edge neural voices."""
+"""nina — open source neural text-to-speech for Linux."""
 
 import asyncio
 import subprocess
@@ -16,6 +16,8 @@ VOICE_SHORTCUTS = {
     "sonia":   "en-GB-SoniaNeural",
     "natasha": "en-AU-NatashaNeural",
     "william": "en-AU-WilliamNeural",
+    "connor":  "en-IE-ConnorNeural",
+    "emily":   "en-IE-EmilyNeural",
     "andrew":  "en-US-AndrewNeural",
     "ava":     "en-US-AvaNeural",
     "brian":   "en-US-BrianNeural",
@@ -67,7 +69,7 @@ async def resolve_voice(name: str) -> str:
 async def main() -> None:
     p = argparse.ArgumentParser(
         prog="nina",
-        description="nina — Microsoft neural TTS for Linux via Edge voices",
+        description="nina — open source neural TTS for Linux",
     )
     p.add_argument("text", nargs="*", help="Text to read (omit to read from stdin)")
     p.add_argument(

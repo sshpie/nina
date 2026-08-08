@@ -1,13 +1,14 @@
 # nina
 
-Read text aloud using Microsoft Edge's neural voices — on Linux.
+Read text aloud using open source neural TTS.
 
-Microsoft's natural TTS voices (Aria, Guy, Libby, Ryan, etc.) are wired into Edge's Web Speech API on Linux but the Read Aloud UI button isn't exposed. Nina gives you two ways to use them:
+Nina uses open source speech synthesis technology to deliver high-quality, natural-sounding voices on Linux — through a CLI, a desktop app, or a browser extension.
 
 - **CLI** — pipe any text to `nina` and it plays through your speakers
-- **Bookmarklet** — click once on any webpage and a Read Aloud bar appears
+- **Desktop GUI** — paste text, pick a voice, press Play
+- **Browser extension** — one click reads any webpage aloud with a floating toolbar
 
-No API key. No Azure account. Same voices as Edge Read Aloud on Windows.
+No API key. No account required.
 
 ---
 
@@ -65,37 +66,58 @@ nina --list
 | `sonia` | en-GB-SoniaNeural | British female |
 | `natasha` | en-AU-NatashaNeural | Australian |
 | `william` | en-AU-WilliamNeural | Australian male |
+| `connor` | en-IE-ConnorNeural | Irish male |
+| `emily` | en-IE-EmilyNeural | Irish female |
 
-Full voice IDs also work: `nina -v en-US-BrianMultilingualNeural "..."` — run `nina --list` to see all ~400 voices.
+Full voice IDs also work: `nina -v en-US-BrianMultilingualNeural "..."` — run `nina --list` to see all voices.
+
+---
+
+## Desktop GUI
+
+```bash
+python3 nina_gui.py
+```
+
+Pick a voice from the dropdown (47 English voices, filterable by region or name), set speed, paste text, and press **▶ Play**. The Clipboard button pulls whatever is in your clipboard directly into the text area.
+
+---
+
+## Browser extension
+
+Load `extension/` as an unpacked extension in Chrome, Brave, or any Chromium browser.
+
+- **Keyboard shortcut:** `Ctrl+Shift+U` toggles the read-aloud bar on any page
+- **Popup:** click the Nina icon in the toolbar to set default voice and speed, then click **▶ Read This Page**
+
+The floating bar shows:
+- ▶ / ⏸ Play/Pause
+- « / » Back/Forward
+- Voice picker
+- Speed selector (0.75× – 2×)
+- Chunk progress counter
 
 ---
 
 ## Bookmarklet
 
-For browser use (Edge, Chrome, Firefox), the bookmarklet injects a Read Aloud toolbar into any webpage using the same Microsoft neural voices via the Web Speech API.
+For browsers without extension support, copy `bookmarklet.txt` and save it as a bookmark URL. Click it on any page to inject the read-aloud toolbar.
 
 **Install:** Copy the contents of `bookmarklet.txt`, create a new bookmark in your browser, paste it as the URL.
 
-**Use:** Click the bookmark on any article page. The bar appears at the top with:
-- ▶ / ⏸ Play/Pause
-- « / » Back/Forward
-- Voice picker (all Microsoft neural voices)
-- Speed selector (0.75× – 2×)
-- Chunk progress counter
-
-Click the bookmark again to close it.
+**Use:** Click the bookmark on any article page. Click it again to close the bar.
 
 ---
 
 ## How it works
 
-Edge on Linux exposes Microsoft's neural voices through the Web Speech API (`speechSynthesis.getVoices()`). These are the same cloud-hosted voices as Edge Read Aloud on Windows — streamed from Microsoft's servers. Nina accesses the same voice API directly via `edge-tts`, bypassing the browser entirely for CLI use.
+Nina uses the [`edge-tts`](https://github.com/rany2/edge-tts) open source library for CLI and desktop playback, streaming audio directly to `mpv` — no intermediate files. The browser extension and bookmarklet use the browser's built-in Web Speech API (`speechSynthesis`), which works in any Chromium-based browser.
 
-Requires an internet connection. Voices are not cached locally.
+Requires an internet connection. Voices are not stored locally.
 
 ---
 
 ## Dependencies
 
-- [`edge-tts`](https://github.com/rany2/edge-tts) — Microsoft TTS API client
+- [`edge-tts`](https://github.com/rany2/edge-tts) — open source TTS library
 - `mpv` — audio playback for CLI streaming

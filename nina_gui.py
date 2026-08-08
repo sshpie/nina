@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""nina GUI — Microsoft neural TTS desktop app."""
+"""nina GUI — open source neural TTS desktop app."""
 
 import asyncio
 import subprocess
