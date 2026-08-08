@@ -25,6 +25,126 @@ FONT    = ("Inter", 11) if sys.platform != "darwin" else ("SF Pro Text", 11)
 MONO    = ("JetBrains Mono", 10)
 
 PROGRESS_FILE = Path.home() / ".config" / "nina" / "progress.json"
+LIBRARY_DIR   = Path.home() / "chainsaw" / "books"
+
+
+# ── Library window ────────────────────────────────────────────────────────────
+class LibraryWindow(tk.Toplevel):
+    """Scrollable panel listing all books in ~/chainsaw/books/."""
+
+    def __init__(self, parent, progress: dict, on_open):
+        super().__init__(parent)
+        self.title("Nina — Library")
+        self.geometry("540x520")
+        self.minsize(400, 300)
+        self.configure(bg=BG)
+        self.resizable(True, True)
+        self._on_open = on_open
+        self._progress = progress
+        self._all_books: list[tuple[str, str]] = []  # [(display_label, path)]
+
+        self._build()
+        self._populate()
+        self.grab_set()   # modal
+
+    def _build(self):
+        # Search row
+        top = tk.Frame(self, bg=BG)
+        top.pack(fill="x", padx=12, pady=(12, 6))
+        tk.Label(top, text="🔍", bg=BG, fg=FG2, font=("Inter", 11)).pack(side="left")
+        self._q = tk.StringVar()
+        self._q.trace_add("write", lambda *_: self._filter())
+        tk.Entry(top, textvariable=self._q, bg=BG2, fg=FG, insertbackground=FG,
+                 relief="flat", font=("Inter", 11), width=36).pack(side="left", padx=(6, 0), fill="x", expand=True)
+
+        # Listbox + scrollbar
+        frame = tk.Frame(self, bg=BG)
+        frame.pack(fill="both", expand=True, padx=12, pady=(0, 6))
+        sb = tk.Scrollbar(frame, bg=BG3, troughcolor=BG, relief="flat")
+        sb.pack(side="right", fill="y")
+        self._lb = tk.Listbox(frame, bg=BG2, fg=FG, selectbackground=ACCENT,
+                              selectforeground="#ffffff", relief="flat",
+                              font=("Inter", 11), activestyle="none",
+                              yscrollcommand=sb.set, borderwidth=0,
+                              highlightthickness=0)
+        self._lb.pack(side="left", fill="both", expand=True)
+        sb.config(command=self._lb.yview)
+        self._lb.bind("<Double-Button-1>", self._open_selected)
+        self._lb.bind("<Return>", self._open_selected)
+
+        # Bottom buttons
+        bot = tk.Frame(self, bg=BG)
+        bot.pack(fill="x", padx=12, pady=(0, 12))
+        tk.Button(bot, text="▶ Open", command=self._open_selected,
+                  bg=ACCENT, fg=FG, activebackground="#6a9aff", activeforeground=FG,
+                  relief="flat", font=("Inter", 11), padx=14, pady=5,
+                  cursor="hand2").pack(side="left", padx=(0, 8))
+        tk.Button(bot, text="Browse for file…", command=self._browse,
+                  bg=BG3, fg=FG, activebackground=ACCENT, activeforeground=FG,
+                  relief="flat", font=("Inter", 11), padx=10, pady=5,
+                  cursor="hand2").pack(side="left")
+        tk.Button(bot, text="Cancel", command=self.destroy,
+                  bg=BG3, fg=FG2, activebackground=BG3, activeforeground=FG,
+                  relief="flat", font=("Inter", 11), padx=10, pady=5,
+                  cursor="hand2").pack(side="right")
+
+    def _slug_to_title(self, stem: str) -> str:
+        """'02_9781000956009_philosophy-of-cybersecurity' → '02. Philosophy of Cybersecurity'"""
+        parts = stem.split("_", 2)
+        num   = parts[0] if parts else ""
+        slug  = parts[2] if len(parts) >= 3 else stem
+        title = slug.replace("-", " ").replace("_", " ").title()
+        return f"{num}. {title}" if num.isdigit() else title
+
+    def _populate(self):
+        self._all_books = []
+        if not LIBRARY_DIR.exists():
+            self._lb.insert("end", "  Library not found: ~/chainsaw/books/")
+            return
+        for p in sorted(LIBRARY_DIR.iterdir()):
+            if p.suffix.lower() not in ('.txt', '.pdf', '.epub'):
+                continue
+            label = self._slug_to_title(p.stem)
+            # Append progress indicator if we have a saved position
+            saved = self._progress.get(str(p))
+            if saved:
+                label += f"  [ch {saved + 1}]"
+            self._all_books.append((label, str(p)))
+        self._refresh_list(self._all_books)
+
+    def _filter(self):
+        q = self._q.get().lower()
+        if not q:
+            self._refresh_list(self._all_books)
+        else:
+            filtered = [(l, p) for l, p in self._all_books if q in l.lower()]
+            self._refresh_list(filtered)
+
+    def _refresh_list(self, items):
+        self._lb.delete(0, "end")
+        self._shown = items
+        for label, _ in items:
+            self._lb.insert("end", f"  {label}")
+        if items:
+            self._lb.selection_set(0)
+
+    def _open_selected(self, _event=None):
+        sel = self._lb.curselection()
+        if not sel:
+            return
+        _, path = self._shown[sel[0]]
+        self.destroy()
+        self._on_open(path)
+
+    def _browse(self):
+        path = filedialog.askopenfilename(
+            title="Open Book",
+            filetypes=[("Books", "*.txt *.pdf *.epub"), ("All files", "*.*")],
+            initialdir=str(LIBRARY_DIR) if LIBRARY_DIR.exists() else str(Path.home()),
+        )
+        if path:
+            self.destroy()
+            self._on_open(path)
 
 
 # ── Book loader ───────────────────────────────────────────────────────────────
@@ -367,18 +487,9 @@ class NinaApp(tk.Tk):
 
     # ── Open book ─────────────────────────────────────────────────────────────
     def _open_book(self):
-        path = filedialog.askopenfilename(
-            title="Open Book",
-            filetypes=[
-                ("Books", "*.txt *.pdf *.epub"),
-                ("Text files", "*.txt"),
-                ("PDF files",  "*.pdf"),
-                ("EPUB files", "*.epub"),
-                ("All files",  "*.*"),
-            ],
-            initialdir=str(Path.home() / "chainsaw" / "books")
-                if (Path.home() / "chainsaw" / "books").exists() else str(Path.home()),
-        )
+        LibraryWindow(self, self._progress, self._open_book_path)
+
+    def _open_book_path(self, path: str):
         if not path:
             return
 
