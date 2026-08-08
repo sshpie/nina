@@ -13,11 +13,11 @@ Nina delivers high-quality, natural-sounding voices on Linux through a CLI, a de
 ## Install
 
 ```bash
-pip install edge-tts
 sudo apt install mpv
 
 git clone https://github.com/zellkernel/nina
 cd nina
+pip install -r requirements.txt
 chmod +x nina.py
 ln -s "$PWD/nina.py" ~/.local/bin/nina
 ```
@@ -128,15 +128,15 @@ For browsers without extension support, copy `bookmarklet.txt` and save it as a 
 
 | Package | Purpose |
 |---------|---------|
-| `edge-tts` | Neural speech synthesis streaming |
+| see `requirements.txt` | Neural speech synthesis + book format support |
 | `mpv` | Audio playback |
 | `pypdf` | PDF text extraction |
 | `ebooklib` | EPUB parsing |
 | `beautifulsoup4` | HTML stripping inside EPUB files |
 
-Install optional dependencies for book support:
+All dependencies (including book format support) are in `requirements.txt`:
 ```bash
-pip install pypdf ebooklib beautifulsoup4
+pip install -r requirements.txt
 ```
 
 ---

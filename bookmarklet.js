@@ -121,7 +121,7 @@
     voiceSel.innerHTML = '';
     mv.forEach((v, i) => {
       const label = v.name
-        .replace(/^(?:Microsoft|Google) /, '')
+        .replace(/^\S+ (?=\S+ )/, '')
         .replace(/ Online$/, '')
         .replace(/ \(Natural\)$/, '')
         .replace(/ - /, ' · ');

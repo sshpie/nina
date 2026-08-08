@@ -5,7 +5,7 @@ import asyncio
 import subprocess
 import sys
 import argparse
-import edge_tts
+import tts as _tts
 
 VOICE_SHORTCUTS = {
     "aria":    "en-US-AriaNeural",
@@ -27,7 +27,7 @@ VOICE_SHORTCUTS = {
 
 async def stream_audio(text: str, voice_id: str, rate: str) -> None:
     """Stream TTS audio directly to mpv."""
-    communicate = edge_tts.Communicate(text, voice_id, rate=rate)
+    communicate = _tts.Communicate(text, voice_id, rate=rate)
     proc = subprocess.Popen(
         ["mpv", "--no-video", "--really-quiet", "--audio-display=no", "-"],
         stdin=subprocess.PIPE,
@@ -43,7 +43,7 @@ async def stream_audio(text: str, voice_id: str, rate: str) -> None:
 
 
 async def save_audio(text: str, voice_id: str, rate: str, path: str) -> None:
-    communicate = edge_tts.Communicate(text, voice_id, rate=rate)
+    communicate = _tts.Communicate(text, voice_id, rate=rate)
     await communicate.save(path)
 
 
@@ -54,7 +54,7 @@ async def resolve_voice(name: str) -> str:
     if "Neural" in name:
         return name
     # Prefix match against full list
-    all_voices = await edge_tts.list_voices()
+    all_voices = await _tts.list_voices()
     match = next(
         (v["ShortName"] for v in all_voices
          if v["ShortName"].lower().startswith(name.lower())),
@@ -85,7 +85,7 @@ async def main() -> None:
     args = p.parse_args()
 
     if args.list:
-        voices = await edge_tts.list_voices()
+        voices = await _tts.list_voices()
         for v in sorted(voices, key=lambda x: x["Locale"]):
             print(f"{v['ShortName']:<48} {v['Gender']:<8} {v['Locale']}")
         return

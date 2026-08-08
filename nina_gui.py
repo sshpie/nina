@@ -10,7 +10,7 @@ import threading
 import tkinter as tk
 from pathlib import Path
 from tkinter import ttk, messagebox, filedialog
-import edge_tts
+import tts as _tts
 
 # ── Colours ──────────────────────────────────────────────────────────────────
 BG      = "#1c1c2e"
@@ -411,7 +411,7 @@ class TTSWorker:
     def load_voices(self, callback):
         async def _load():
             try:
-                voices = await edge_tts.list_voices()
+                voices = await _tts.list_voices()
                 self._voices = sorted(voices, key=lambda v: v["ShortName"])
                 callback(self._voices)
             except Exception:
@@ -432,7 +432,7 @@ class TTSWorker:
                     if not chunk:
                         continue
                     self.on_chunk(idx + 1, total, chunk[:60] + ("…" if len(chunk) > 60 else ""))
-                    communicate = edge_tts.Communicate(chunk, voice_id, rate=rate)
+                    communicate = _tts.Communicate(chunk, voice_id, rate=rate)
                     proc = subprocess.Popen(
                         ["mpv", "--no-video", "--really-quiet", "--audio-display=no", "-"],
                         stdin=subprocess.PIPE,
