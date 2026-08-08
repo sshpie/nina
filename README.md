@@ -111,13 +111,5 @@ For browsers without extension support, copy `bookmarklet.txt` and save it as a 
 
 ## How it works
 
-Nina uses the [`edge-tts`](https://github.com/rany2/edge-tts) open source library for CLI and desktop playback, streaming audio directly to `mpv` — no intermediate files. The browser extension and bookmarklet use the browser's built-in Web Speech API (`speechSynthesis`), which works in any Chromium-based browser.
+I just took the Microsoft Edge browser's read aloud voice API :)
 
-Requires an internet connection. Voices are not stored locally.
-
----
-
-## Dependencies
-
-- [`edge-tts`](https://github.com/rany2/edge-tts) — open source TTS library
-- `mpv` — audio playback for CLI streaming
