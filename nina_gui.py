@@ -25,7 +25,7 @@ FONT    = ("Inter", 11) if sys.platform != "darwin" else ("SF Pro Text", 11)
 MONO    = ("JetBrains Mono", 10)
 
 PROGRESS_FILE = Path.home() / ".config" / "nina" / "progress.json"
-LIBRARY_DIR   = Path.home() / "chainsaw" / "books"
+LIBRARY_DIR   = Path.home() / "VDT" / "books"
 
 
 # ── Library window ────────────────────────────────────────────────────────────
@@ -88,28 +88,40 @@ class LibraryWindow(tk.Toplevel):
                   relief="flat", font=("Inter", 11), padx=10, pady=5,
                   cursor="hand2").pack(side="right")
 
-    def _slug_to_title(self, stem: str) -> str:
-        """'02_9781000956009_philosophy-of-cybersecurity' → '02. Philosophy of Cybersecurity'"""
-        parts = stem.split("_", 2)
-        num   = parts[0] if parts else ""
-        slug  = parts[2] if len(parts) >= 3 else stem
-        title = slug.replace("-", " ").replace("_", " ").title()
-        return f"{num}. {title}" if num.isdigit() else title
+    def _dir_to_title(self, name: str) -> str:
+        """'gray-hat-hacking-the-ethical-hacker-s-handbook-6e' → readable title."""
+        name = re.sub(r'^\d{10,13}-', '', name)   # strip ISBN prefix
+        return name.replace('-', ' ').replace('_', ' ').title()
 
     def _populate(self):
         self._all_books = []
         if not LIBRARY_DIR.exists():
-            self._lb.insert("end", "  Library not found: ~/chainsaw/books/")
+            self._lb.insert("end", f"  Library not found: {LIBRARY_DIR}")
             return
-        for p in sorted(LIBRARY_DIR.iterdir()):
-            if p.suffix.lower() not in ('.txt', '.pdf', '.epub'):
+
+        for entry in sorted(LIBRARY_DIR.iterdir()):
+            if not entry.is_dir() or entry.name.startswith('.'):
                 continue
-            label = self._slug_to_title(p.stem)
-            # Append progress indicator if we have a saved position
-            saved = self._progress.get(str(p))
-            if saved:
-                label += f"  [ch {saved + 1}]"
-            self._all_books.append((label, str(p)))
+            # Determine if entry is a category dir (contains subdirs) or a book dir (contains .md)
+            subdirs = [c for c in entry.iterdir() if c.is_dir()]
+            md_files = [f for f in entry.iterdir() if f.suffix == '.md']
+            if md_files:
+                # Direct book (top-level book dir)
+                label = f"Other / {self._dir_to_title(entry.name)}"
+                saved = self._progress.get(str(entry))
+                if saved:
+                    label += f"  [ch {saved + 1}]"
+                self._all_books.append((label, str(entry)))
+            elif subdirs:
+                # Category directory — list each book inside
+                cat = entry.name.replace('-', ' ').replace('_', ' ').title()
+                for book_dir in sorted(subdirs):
+                    label = f"{cat} / {self._dir_to_title(book_dir.name)}"
+                    saved = self._progress.get(str(book_dir))
+                    if saved:
+                        label += f"  [ch {saved + 1}]"
+                    self._all_books.append((label, str(book_dir)))
+
         self._refresh_list(self._all_books)
 
     def _filter(self):
@@ -156,15 +168,40 @@ class BookLoader:
         r'\n(?=(?:Chapter|CHAPTER|Part|PART|Section|SECTION)\s+\d+)', re.M
     )
     SKIP_NAMES  = {'toc', 'cover', 'nav', 'ncx', 'opf', 'copyright',
-                   'title', 'titlepage', 'colophon', 'halftitle'}
+                   'title', 'titlepage', 'colophon', 'halftitle',
+                   'fm', 'fm2', 'ata', 'gla', 'ack', 'contents',
+                   'dedication', 'about', 'copy', 'pre', 'int', 'p1', 'p2'}
 
     def load(self, path: str):
-        ext = Path(path).suffix.lower()
+        p = Path(path)
+        if p.is_dir():
+            return self._load_book_dir(p)
+        ext = p.suffix.lower()
         if ext == '.pdf':
             return self._load_pdf(path)
         if ext == '.epub':
             return self._load_epub(path)
         return self._load_txt(path)
+
+    # ── Directory of .md files (VDT format) ──────────────────────────────────
+    def _load_book_dir(self, dirpath: Path):
+        md_files = sorted(dirpath.glob('*.md'))
+        chapters = []
+        for f in md_files:
+            stem = re.sub(r'^\d+-', '', f.stem).lower()  # strip leading number
+            if stem in self.SKIP_NAMES:
+                continue
+            text = f.read_text(encoding='utf-8', errors='replace').strip()
+            if len(text) < 150:
+                continue
+            title = stem.replace('-', ' ').replace('_', ' ').title()
+            chapters.append((title, text))
+        if not chapters:
+            # Fallback: include everything
+            chapters = [(re.sub(r'^\d+-', '', f.stem).title(),
+                         f.read_text(errors='replace').strip())
+                        for f in md_files if f.stat().st_size > 50]
+        return chapters
 
     # ── TXT ──────────────────────────────────────────────────────────────────
     def _load_txt(self, path):
@@ -298,7 +335,7 @@ class TTSWorker:
                     self._proc = proc
                     async for seg in communicate.stream():
                         if self._cancel_flag.is_set():
-                            proc.terminate()
+                            proc.kill()   # SIGKILL — immediate, no buffer drain
                             break
                         if seg["type"] == "audio":
                             try:
@@ -318,7 +355,7 @@ class TTSWorker:
         self._cancel_flag.set()
         if self._proc:
             try:
-                self._proc.terminate()
+                self._proc.kill()   # SIGKILL — cut audio immediately
             except Exception:
                 pass
             self._proc = None
