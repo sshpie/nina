@@ -754,19 +754,28 @@ class NinaApp(tk.Tk):
             self._rebuild_voice_list(voices)
         self._worker.load_voices(callback)
 
+    # Display-name overrides: ShortName fragment → label shown in the dropdown
+    _DISPLAY_NAMES = {
+        "EmilyNeural":  "Helen",
+        "AndrewNeural": "Alex",
+    }
+
     def _rebuild_voice_list(self, voices):
         en_voices = [v for v in voices if v.get("Locale", "").startswith("en-")]
         entries = []
         for v in en_voices:
-            name  = v["ShortName"]
-            parts = name.split("-")
-            label = f"{parts[2].replace('Neural','').replace('Multilingual',' (ML)')} · {v['Locale']}"
+            name   = v["ShortName"]
+            parts  = name.split("-")
+            raw    = parts[2].replace('Neural', '').replace('Multilingual', ' (ML)')
+            # Apply display-name override if one exists for this short name fragment
+            display = self._DISPLAY_NAMES.get(parts[2], raw)
+            label  = f"{display} · {v['Locale']}"
             entries.append(label)
             self._voice_map[label] = name
 
         def _update():
             self._voice_box["values"] = entries
-            helen = next((e for e in entries if "Emily" in e and "en-IE" in e), entries[0] if entries else "")
+            helen = next((e for e in entries if e.startswith("Helen") and "en-IE" in e), entries[0] if entries else "")
             self._voice_var.set(helen)
             self._status(f"Ready  •  {len(entries)} English voices")
         self.after(0, _update)
