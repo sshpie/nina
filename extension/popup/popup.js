@@ -3,57 +3,57 @@ const STORE = 'nina_prefs';
 const voiceSel  = document.getElementById('voiceSel');
 const rateSel   = document.getElementById('rateSel');
 const injectBtn = document.getElementById('injectBtn');
+const voiceNote = document.getElementById('voiceNote');
 
-// Load voices via a hidden iframe pointing to an empty page
-// (popup has its own speech context)
-let voices = [];
-function loadVoices() {
-  voices = speechSynthesis.getVoices().filter(v => v.name.includes('Microsoft'));
-  if (!voices.length) voices = speechSynthesis.getVoices();
-  voiceSel.innerHTML = '';
-  voices.forEach((v, i) => {
-    const label = v.name
-      .replace('Microsoft ', '')
-      .replace(' Online', '')
-      .replace(' (Natural)', '')
-      .replace(/ - .+/, '');
-    voiceSel.add(new Option(label, i));
-  });
-  // Restore saved pref
-  chrome.storage.local.get(STORE, data => {
-    if (data[STORE]) {
-      if (data[STORE].voiceIdx !== undefined) voiceSel.value = data[STORE].voiceIdx;
-      if (data[STORE].rate !== undefined) rateSel.value = data[STORE].rate;
+// Restore saved speed pref
+chrome.storage.local.get(STORE, data => {
+  if (data[STORE]?.rate) rateSel.value = data[STORE].rate;
+});
+
+// Request voice list from the active tab's content script
+chrome.tabs.query({ active: true, currentWindow: true }, tabs => {
+  if (!tabs[0]) return;
+  chrome.tabs.sendMessage(tabs[0].id, { action: 'getVoices' }, response => {
+    if (chrome.runtime.lastError || !response?.voices?.length) {
+      // Content script not injected yet — show placeholder
+      voiceSel.innerHTML = '<option value="">Set on page bar after activating</option>';
+      if (voiceNote) voiceNote.textContent = 'Click "Read This Page" first to load voices.';
+      return;
     }
+    const voices = response.voices;
+    chrome.storage.local.get(STORE, data => {
+      const saved = data[STORE]?.voiceIdx || 0;
+      voiceSel.innerHTML = '';
+      voices.forEach((name, i) => voiceSel.add(new Option(name, i)));
+      voiceSel.value = saved;
+    });
   });
-}
-
-if (speechSynthesis.getVoices().length > 0) loadVoices();
-speechSynthesis.onvoiceschanged = loadVoices;
+});
 
 // Save prefs on change
 voiceSel.addEventListener('change', savePrefs);
 rateSel.addEventListener('change', savePrefs);
 
 function savePrefs() {
-  chrome.storage.local.set({
-    [STORE]: {
-      voiceIdx: parseInt(voiceSel.value),
-      rate: rateSel.value,
-    }
-  });
+  const prefs = { rate: rateSel.value };
+  const v = parseInt(voiceSel.value);
+  if (!isNaN(v)) prefs.voiceIdx = v;
+  chrome.storage.local.set({ [STORE]: prefs });
 }
 
-// Inject/toggle the content script bar on the active tab
+// Inject / toggle Nina on the active tab
 injectBtn.addEventListener('click', () => {
   chrome.tabs.query({ active: true, currentWindow: true }, tabs => {
     if (!tabs[0]) return;
-    chrome.scripting.executeScript({
-      target: { tabId: tabs[0].id },
-      files: ['content/content.js'],
-    }).catch(() => {
-      // Already injected via content_scripts — just send a toggle message
-      chrome.tabs.sendMessage(tabs[0].id, { action: 'toggle' });
+    // Try toggling via message first (already injected)
+    chrome.tabs.sendMessage(tabs[0].id, { action: 'toggle' }, response => {
+      if (chrome.runtime.lastError) {
+        // Not injected yet — inject now
+        chrome.scripting.executeScript({
+          target: { tabId: tabs[0].id },
+          files: ['content/content.js'],
+        });
+      }
     });
   });
   window.close();

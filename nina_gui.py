@@ -10,13 +10,13 @@ from tkinter import ttk, scrolledtext, messagebox
 import edge_tts
 
 # ── Colours ──────────────────────────────────────────────────────────────────
-BG      = "#0f0f1e"
-BG2     = "#1a1a30"
-BG3     = "#22223a"
-FG      = "#dde0ff"
-FG2     = "#8890bb"
-ACCENT  = "#4a7aff"
-RED     = "#ff5555"
+BG      = "#1c1c2e"
+BG2     = "#2a2a40"
+BG3     = "#363650"
+FG      = "#ffffff"
+FG2     = "#aab0cc"
+ACCENT  = "#5a8aff"
+RED     = "#ff6677"
 GREEN   = "#44ee88"
 FONT    = ("Inter", 11) if sys.platform != "darwin" else ("SF Pro Text", 11)
 MONO    = ("JetBrains Mono", 10)
@@ -127,16 +127,22 @@ class NinaApp(tk.Tk):
         style.configure(".",
             background=BG, foreground=FG,
             fieldbackground=BG2, selectbackground=ACCENT,
+            selectforeground="#ffffff",
+            insertcolor=FG,
             font=FONT)
         style.configure("TCombobox",
             background=BG3, foreground=FG,
-            fieldbackground=BG2, arrowcolor=FG2)
+            fieldbackground=BG2, arrowcolor=FG,
+            selectforeground=FG, selectbackground=BG2)
         style.map("TCombobox",
-            fieldbackground=[("readonly", BG2)],
-            foreground=[("readonly", FG)])
+            fieldbackground=[("readonly", BG2), ("disabled", BG)],
+            foreground=[("readonly", FG), ("disabled", FG2)],
+            selectforeground=[("readonly", FG)],
+            selectbackground=[("readonly", BG2)])
         style.configure("TLabel",  background=BG,  foreground=FG)
         style.configure("TFrame",  background=BG)
         style.configure("Status.TLabel", background=BG, foreground=FG2, font=(*FONT[:1], 10))
+        style.configure("TScrollbar", background=BG3, troughcolor=BG, arrowcolor=FG2)
 
     # ── Layout ────────────────────────────────────────────────────────────────
     def _build_ui(self):

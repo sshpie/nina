@@ -72,6 +72,13 @@ body {
 
 .btn-primary:hover { background: #5a8aff; }
 
+.note {
+  display: block;
+  color: #556;
+  font-size: 11px;
+  margin-top: 4px;
+}
+
 .footer {
   padding: 8px 16px;
   color: #445;

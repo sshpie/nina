@@ -247,5 +247,20 @@
     }
   });
 
+  // ── Message handler for popup ──────────────────────────────────────────────
+  chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
+    if (msg.action === 'getVoices') {
+      const names = msVoices.map(v =>
+        v.name.replace('Microsoft ', '').replace(' Online', '').replace(' (Natural)', '').replace(/ - .+/, '')
+      );
+      sendResponse({ voices: names });
+    }
+    if (msg.action === 'toggle') {
+      togglePlay();
+      sendResponse({ ok: true });
+    }
+    return true;
+  });
+
   updateProg();
 })();
