@@ -51,8 +51,9 @@
   let idx       = 0;
   let playing   = false;
   let paused    = false;
-  let msVoices  = [];
-  let prefs     = { voiceIdx: 0, rate: '+0%' };
+  let allVoices = [];
+  let _utt      = null;  // held at module scope to prevent GC (Chromium bug)
+  let prefs     = { voiceIdx: 0, rate: '1' };
 
   // Load saved prefs
   chrome.storage.local.get(STORE, data => {
@@ -65,7 +66,7 @@
   }
 
   function applyPrefs() {
-    if (voiceSel && msVoices.length > prefs.voiceIdx) {
+    if (voiceSel && allVoices.length > prefs.voiceIdx) {
       voiceSel.value = prefs.voiceIdx;
     }
     if (rateSel) rateSel.value = prefs.rate;
@@ -134,11 +135,11 @@
   // ── Voice loading ──────────────────────────────────────────────────────────
   function populateVoices() {
     const all = speechSynthesis.getVoices();
-    msVoices  = all.filter(v => v.name.includes('Microsoft'));
-    if (!msVoices.length) msVoices = all;
+    const ms  = all.filter(v => v.name.includes('Microsoft'));
+    allVoices  = ms.length ? ms : all;
 
     voiceSel.innerHTML = '';
-    msVoices.forEach((v, i) => {
+    allVoices.forEach((v, i) => {
       const display = v.name
         .replace('Microsoft ', '')
         .replace(' Online', '')
@@ -158,12 +159,13 @@
   // ── Playback ───────────────────────────────────────────────────────────────
   function speakChunk() {
     if (idx >= chunks.length) { ninaStop(); return; }
-    const utt   = new SpeechSynthesisUtterance(chunks[idx]);
-    utt.voice   = msVoices[parseInt(voiceSel.value)] || msVoices[0] || null;
-    utt.rate    = parseFloat(rateSel.value);
-    utt.onend   = () => { idx++; updateProg(); if (playing) speakChunk(); };
-    utt.onerror = () => { idx++; if (playing) speakChunk(); };
-    speechSynthesis.speak(utt);
+    _utt        = new SpeechSynthesisUtterance(chunks[idx]);
+    const vi    = parseInt(voiceSel.value);
+    _utt.voice  = allVoices[isNaN(vi) ? 0 : vi] || allVoices[0] || null;
+    _utt.rate   = parseFloat(rateSel.value);
+    _utt.onend  = () => { idx++; updateProg(); if (playing) speakChunk(); };
+    _utt.onerror = () => { idx++; if (playing) speakChunk(); };
+    speechSynthesis.speak(_utt);
     updateProg();
     highlightChunk(idx);
   }
@@ -250,7 +252,7 @@
   // ── Message handler for popup ──────────────────────────────────────────────
   chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     if (msg.action === 'getVoices') {
-      const names = msVoices.map(v =>
+      const names = allVoices.map(v =>
         v.name.replace('Microsoft ', '').replace(' Online', '').replace(' (Natural)', '').replace(/ - .+/, '')
       );
       sendResponse({ voices: names });

@@ -184,9 +184,21 @@ class NinaApp(tk.Tk):
                                 relief="flat", font=FONT, width=32)
         search_entry.pack(side="left", padx=(6, 0))
 
+        # ── Button row (packed before text area so expand=True doesn't eat its space)
+        btn_row = ttk.Frame(self)
+        btn_row.pack(fill="x", padx=16, pady=(4, 12))
+
+        self._play_btn  = self._mk_btn(btn_row, "▶  Play",  self._toggle_play, ACCENT)
+        self._stop_btn  = self._mk_btn(btn_row, "■  Stop",  self._stop,        BG3)
+        self._clip_btn  = self._mk_btn(btn_row, "📋 Clipboard", self._paste_clipboard, BG3)
+        self._clear_btn = self._mk_btn(btn_row, "✕ Clear",  self._clear_text,  BG3)
+
+        self._chunk_lbl = ttk.Label(btn_row, text="", style="Status.TLabel")
+        self._chunk_lbl.pack(side="right")
+
         # ── Text area
         text_frame = ttk.Frame(self)
-        text_frame.pack(fill="both", expand=True, padx=16, pady=6)
+        text_frame.pack(fill="both", expand=True, padx=16, pady=(0, 6))
 
         self._text = tk.Text(
             text_frame, bg=BG2, fg=FG, insertbackground=FG,
@@ -201,18 +213,6 @@ class NinaApp(tk.Tk):
                                  bg=BG3, troughcolor=BG, relief="flat")
         scrollbar.pack(side="right", fill="y")
         self._text.config(yscrollcommand=scrollbar.set)
-
-        # ── Button row
-        btn_row = ttk.Frame(self)
-        btn_row.pack(fill="x", padx=16, pady=(4, 12))
-
-        self._play_btn  = self._mk_btn(btn_row, "▶  Play",  self._toggle_play, ACCENT)
-        self._stop_btn  = self._mk_btn(btn_row, "■  Stop",  self._stop,        BG3)
-        self._clip_btn  = self._mk_btn(btn_row, "📋 Clipboard", self._paste_clipboard, BG3)
-        self._clear_btn = self._mk_btn(btn_row, "✕ Clear",  self._clear_text,  BG3)
-
-        self._chunk_lbl = ttk.Label(btn_row, text="", style="Status.TLabel")
-        self._chunk_lbl.pack(side="right")
 
     def _mk_btn(self, parent, label, cmd, bg):
         b = tk.Button(parent, text=label, command=cmd,
@@ -233,8 +233,9 @@ class NinaApp(tk.Tk):
         self._worker.load_voices(callback)
 
     def _rebuild_voice_list(self, voices):
+        en_voices = [v for v in voices if v.get("Locale", "").startswith("en-")]
         entries = []
-        for v in voices:
+        for v in en_voices:
             name  = v["ShortName"]          # en-US-AriaNeural
             parts = name.split("-")
             label = f"{parts[2].replace('Neural','').replace('Multilingual',' (ML)')} · {v['Locale']}"
@@ -243,10 +244,9 @@ class NinaApp(tk.Tk):
 
         def _update():
             self._voice_box["values"] = entries
-            # Default to Aria
-            aria = next((e for e in entries if "Aria" in e and "en-US" in e), entries[0])
+            aria = next((e for e in entries if "Aria" in e and "en-US" in e), entries[0] if entries else "")
             self._voice_var.set(aria)
-            self._status(f"Ready  •  {len(voices)} voices loaded")
+            self._status(f"Ready  •  {len(entries)} English voices")
 
         self.after(0, _update)
 
