@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Nina",
   "version": "1.0.0",
-  "description": "Read any webpage aloud with Microsoft neural voices.",
+  "description": "Read any webpage aloud.",
   "permissions": ["storage", "activeTab", "scripting"],
   "action": {
     "default_popup": "popup/popup.html",
