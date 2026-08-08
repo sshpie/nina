@@ -766,8 +766,8 @@ class NinaApp(tk.Tk):
 
         def _update():
             self._voice_box["values"] = entries
-            aria = next((e for e in entries if "Aria" in e and "en-US" in e), entries[0] if entries else "")
-            self._voice_var.set(aria)
+            helen = next((e for e in entries if "Emily" in e and "en-IE" in e), entries[0] if entries else "")
+            self._voice_var.set(helen)
             self._status(f"Ready  •  {len(entries)} English voices")
         self.after(0, _update)
 

@@ -52,7 +52,7 @@ nina --list
 
 | Shortcut | Voice | Style |
 |----------|-------|-------|
-| `aria` | en-US-AriaNeural (default) | News, clear |
+| `aria` | en-US-AriaNeural | News, clear |
 | `guy` | en-US-GuyNeural | News, authoritative |
 | `jenny` | en-US-JennyNeural | Conversation |
 | `andrew` | en-US-AndrewNeural | Warm, confident |
@@ -65,7 +65,7 @@ nina --list
 | `natasha` | en-AU-NatashaNeural | Australian |
 | `william` | en-AU-WilliamNeural | Australian male |
 | `connor` | en-IE-ConnorNeural | Irish male |
-| `emily` | en-IE-EmilyNeural | Irish female |
+| `helen` | en-IE-EmilyNeural (default) | Irish female |
 
 Full voice IDs also work: `nina -v en-US-BrianMultilingualNeural "..."` — run `nina --list` to see all 47 English voices.
 

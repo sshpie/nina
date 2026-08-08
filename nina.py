@@ -17,7 +17,7 @@ VOICE_SHORTCUTS = {
     "natasha": "en-AU-NatashaNeural",
     "william": "en-AU-WilliamNeural",
     "connor":  "en-IE-ConnorNeural",
-    "emily":   "en-IE-EmilyNeural",
+    "helen":   "en-IE-EmilyNeural",
     "andrew":  "en-US-AndrewNeural",
     "ava":     "en-US-AvaNeural",
     "brian":   "en-US-BrianNeural",
@@ -73,8 +73,8 @@ async def main() -> None:
     )
     p.add_argument("text", nargs="*", help="Text to read (omit to read from stdin)")
     p.add_argument(
-        "-v", "--voice", default="aria", metavar="NAME",
-        help=f"Voice shortcut or full ID. Shortcuts: {', '.join(VOICES)}. Default: aria",
+        "-v", "--voice", default="helen", metavar="NAME",
+        help=f"Voice shortcut or full ID. Shortcuts: {', '.join(VOICES)}. Default: helen",
     )
     p.add_argument(
         "-r", "--rate", default="+0%", metavar="RATE",
