@@ -2,13 +2,11 @@
 
 Read text aloud using open source neural TTS.
 
-Nina uses open source speech synthesis technology to deliver high-quality, natural-sounding voices on Linux — through a CLI, a desktop app, or a browser extension.
+Nina delivers high-quality, natural-sounding voices on Linux through a CLI, a desktop GUI, and a browser extension. Load a book, paste text, or read any webpage — no API key, no account required.
 
 - **CLI** — pipe any text to `nina` and it plays through your speakers
-- **Desktop GUI** — paste text, pick a voice, press Play
+- **Desktop GUI** — paste text or load a book, pick a voice, press Play
 - **Browser extension** — one click reads any webpage aloud with a floating toolbar
-
-No API key. No account required.
 
 ---
 
@@ -69,7 +67,7 @@ nina --list
 | `connor` | en-IE-ConnorNeural | Irish male |
 | `emily` | en-IE-EmilyNeural | Irish female |
 
-Full voice IDs also work: `nina -v en-US-BrianMultilingualNeural "..."` — run `nina --list` to see all voices.
+Full voice IDs also work: `nina -v en-US-BrianMultilingualNeural "..."` — run `nina --list` to see all 47 English voices.
 
 ---
 
@@ -79,7 +77,24 @@ Full voice IDs also work: `nina -v en-US-BrianMultilingualNeural "..."` — run 
 python3 nina_gui.py
 ```
 
-Pick a voice from the dropdown (47 English voices, filterable by region or name), set speed, paste text, and press **▶ Play**. The Clipboard button pulls whatever is in your clipboard directly into the text area.
+Pick a voice from the dropdown, set speed, then:
+
+- **Paste text** and press **▶ Play**
+- **Clipboard** button pulls whatever is in your clipboard directly into the text area
+- **Open Book** loads a TXT, PDF, EPUB, or a directory of Markdown files
+
+### Book reader
+
+The GUI includes a full book reader with chapter navigation:
+
+- Supports TXT, PDF, EPUB, and directory-based books (Markdown files)
+- Chapter picker dropdown and ◀ ▶ buttons to navigate
+- **Vertical bookmark bar** — stacked tab markers on the right edge of the text area; click any tab to jump to that chapter; current chapter highlighted in blue
+- Auto-advances to the next chapter when TTS finishes
+- Saves your reading position per book between sessions
+- Stop button cuts audio immediately
+
+Point **Open Book** at any of these formats or point it at a folder of numbered Markdown chapter files.
 
 ---
 
@@ -93,7 +108,7 @@ Load `extension/` as an unpacked extension in Chrome, Brave, or any Chromium bro
 The floating bar shows:
 - ▶ / ⏸ Play/Pause
 - « / » Back/Forward
-- Voice picker
+- Voice picker (English voices from the browser's speech synthesis engine)
 - Speed selector (0.75× – 2×)
 - Chunk progress counter
 
@@ -109,7 +124,25 @@ For browsers without extension support, copy `bookmarklet.txt` and save it as a 
 
 ---
 
+## Dependencies
+
+| Package | Purpose |
+|---------|---------|
+| `edge-tts` | Neural TTS audio streaming |
+| `mpv` | Audio playback |
+| `pypdf` | PDF text extraction |
+| `ebooklib` | EPUB parsing |
+| `beautifulsoup4` | HTML stripping inside EPUB files |
+
+Install optional dependencies for book support:
+```bash
+pip install pypdf ebooklib beautifulsoup4
+```
+
+---
+
 ## How it works
 
-Nina uses `edge-tts`, an open source Python library that streams neural speech synthesis audio. The library sends text to a publicly accessible TTS endpoint and returns an audio stream — no API key, no account, no browser required. The browser extension uses the Web Speech API built into Chromium browsers for in-page reading.
+The CLI and GUI use `edge-tts`, an open source Python library that streams neural speech synthesis audio. Text is sent to a publicly accessible TTS endpoint and the audio stream is piped directly to `mpv` — no API key, no account, no browser required.
 
+The browser extension and bookmarklet use the Web Speech API built into Chromium browsers for in-page reading.
