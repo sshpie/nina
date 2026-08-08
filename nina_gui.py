@@ -209,7 +209,7 @@ class LibraryWindow(tk.Toplevel):
                 continue
             # Determine if entry is a category dir (contains subdirs) or a book dir (contains .md)
             subdirs = [c for c in entry.iterdir() if c.is_dir()]
-            md_files = [f for f in entry.iterdir() if f.suffix == '.md']
+            md_files = [f for f in entry.iterdir() if f.suffix in ('.md', '.txt')]
             if md_files:
                 # Direct book (top-level book dir)
                 label = f"Other / {self._dir_to_title(entry.name)}"
@@ -288,12 +288,17 @@ class BookLoader:
             return self._load_epub(path)
         return self._load_txt(path)
 
-    # ── Directory of .md files (VDT format) ──────────────────────────────────
+    # ── Directory of .md / .txt files (VDT format) ───────────────────────────
     def _load_book_dir(self, dirpath: Path):
-        md_files = sorted(dirpath.glob('*.md'))
+        all_files = sorted(
+            f for f in dirpath.iterdir()
+            if f.suffix in ('.md', '.txt') and f.is_file()
+        )
         chapters = []
-        for f in md_files:
-            stem = re.sub(r'^\d+-', '', f.stem).lower()  # strip leading number
+        for f in all_files:
+            stem = re.sub(r'^\d+-', '', f.stem).lower()
+            # strip common prefix codes like 'blva-ch01-' or '01-'
+            stem = re.sub(r'^[a-z]+-ch\d+-', '', stem)
             if stem in self.SKIP_NAMES:
                 continue
             text = f.read_text(encoding='utf-8', errors='replace').strip()
@@ -302,10 +307,9 @@ class BookLoader:
             title = stem.replace('-', ' ').replace('_', ' ').title()
             chapters.append((title, text))
         if not chapters:
-            # Fallback: include everything
-            chapters = [(re.sub(r'^\d+-', '', f.stem).title(),
+            chapters = [(re.sub(r'^.*?-', '', f.stem).title(),
                          f.read_text(errors='replace').strip())
-                        for f in md_files if f.stat().st_size > 50]
+                        for f in all_files if f.stat().st_size > 50]
         return chapters
 
     # ── TXT ──────────────────────────────────────────────────────────────────
