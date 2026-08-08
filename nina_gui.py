@@ -449,33 +449,57 @@ class NinaApp(tk.Tk):
                  relief="flat", font=FONT, width=32).pack(side="left", padx=(6, 0))
 
         # ── Book bar (hidden until a book is loaded) ──────────────────────────
-        self._book_bar = tk.Frame(self, bg=BG2, pady=6)
+        self._book_bar = tk.Frame(self, bg=BG2)
         # Not packed yet — shown by _show_book_bar()
 
-        self._book_title_lbl = tk.Label(self._book_bar, text="", bg=BG2, fg=ACCENT,
+        # ── Row 1: title + chapter picker ─────────────────────────────────────
+        bar_top = tk.Frame(self._book_bar, bg=BG2)
+        bar_top.pack(fill="x", padx=10, pady=(6, 2))
+
+        self._book_title_lbl = tk.Label(bar_top, text="", bg=BG2, fg=ACCENT,
                                          font=(*FONT[:1], 10, "bold"), anchor="w")
-        self._book_title_lbl.pack(side="left", padx=(10, 16))
+        self._book_title_lbl.pack(side="left")
 
-        nav_frame = tk.Frame(self._book_bar, bg=BG2)
-        nav_frame.pack(side="right", padx=10)
+        nav_frame = tk.Frame(bar_top, bg=BG2)
+        nav_frame.pack(side="right")
 
-        self._prev_ch_btn = tk.Button(nav_frame, text="◀ Prev", command=self._prev_chapter,
+        self._prev_ch_btn = tk.Button(nav_frame, text="◀", command=self._prev_chapter,
                                        bg=BG3, fg=FG, activebackground=ACCENT,
                                        activeforeground=FG, relief="flat",
-                                       font=FONT, padx=8, pady=3, cursor="hand2")
-        self._prev_ch_btn.pack(side="left", padx=(0, 4))
+                                       font=FONT, padx=6, pady=2, cursor="hand2")
+        self._prev_ch_btn.pack(side="left", padx=(0, 3))
 
         self._chapter_var = tk.StringVar()
         self._chapter_box = ttk.Combobox(nav_frame, textvariable=self._chapter_var,
-                                          state="readonly", width=28)
-        self._chapter_box.pack(side="left", padx=(0, 4))
+                                          state="readonly", width=26)
+        self._chapter_box.pack(side="left", padx=(0, 3))
         self._chapter_box.bind("<<ComboboxSelected>>", self._on_chapter_selected)
 
-        self._next_ch_btn = tk.Button(nav_frame, text="Next ▶", command=self._next_chapter,
+        self._next_ch_btn = tk.Button(nav_frame, text="▶", command=self._next_chapter,
                                        bg=BG3, fg=FG, activebackground=ACCENT,
                                        activeforeground=FG, relief="flat",
-                                       font=FONT, padx=8, pady=3, cursor="hand2")
+                                       font=FONT, padx=6, pady=2, cursor="hand2")
         self._next_ch_btn.pack(side="left")
+
+        # ── Row 2: scrubber (bookmark drag bar) ───────────────────────────────
+        bar_bot = tk.Frame(self._book_bar, bg=BG2)
+        bar_bot.pack(fill="x", padx=10, pady=(0, 6))
+
+        self._scrubber_var = tk.IntVar(value=0)
+        self._scrubber = tk.Scale(
+            bar_bot, variable=self._scrubber_var, orient="horizontal",
+            from_=0, to=1, showvalue=False,
+            bg=BG2, fg=FG2, troughcolor=BG3, activebackground=ACCENT,
+            highlightthickness=0, bd=0, sliderlength=14, width=6,
+            cursor="hand2",
+        )
+        self._scrubber.pack(side="left", fill="x", expand=True, padx=(0, 8))
+        # Load chapter on release so dragging doesn't thrash the text area
+        self._scrubber.bind("<ButtonRelease-1>", self._on_scrub)
+
+        self._scrub_lbl = tk.Label(bar_bot, text="", bg=BG2, fg=FG2,
+                                    font=(*FONT[:1], 9), anchor="w", width=28)
+        self._scrub_lbl.pack(side="left")
 
         # ── Button row ────────────────────────────────────────────────────────
         self._btn_row = ttk.Frame(self)
@@ -544,12 +568,13 @@ class NinaApp(tk.Tk):
         saved = self._progress.get(path, 0)
         self._chapter_idx   = min(saved, len(chapters) - 1)
 
-        # Populate chapter combobox
+        # Populate chapter combobox and scrubber range
         titles = [f"{i+1}. {t}" for i, (t, _) in enumerate(chapters)]
         self._chapter_box["values"] = titles
         self._chapter_var.set(titles[self._chapter_idx])
+        self._scrubber.config(to=max(1, len(chapters) - 1))
 
-        short = Path(path).stem[:55]
+        short = Path(path).stem[:50]
         self._book_title_lbl.config(text=f"📖  {short}")
         self._show_book_bar()
 
@@ -557,20 +582,36 @@ class NinaApp(tk.Tk):
         self._status(f"{Path(path).name}  •  {len(chapters)} chapters")
 
     def _load_chapter(self, idx):
-        _, text = self._book_chapters[idx]
+        title, text = self._book_chapters[idx]
         self._text.config(state="normal")
         self._text.delete("1.0", "end")
         self._text.insert("1.0", text)
         self._text.see("1.0")
 
+        total = len(self._book_chapters)
+
         titles = self._chapter_box["values"]
         if titles:
             self._chapter_var.set(titles[idx])
 
-        total = len(self._book_chapters)
+        # Sync scrubber without triggering its callback
+        self._scrubber.config(command="")
+        self._scrubber_var.set(idx)
+        self._scrubber.config(command=lambda v: None)
+
+        self._scrub_lbl.config(text=f"{idx+1}/{total}  {title[:26]}")
         self._chunk_lbl.config(text=f"ch {idx+1}/{total}")
         self._prev_ch_btn.config(state="normal" if idx > 0 else "disabled")
         self._next_ch_btn.config(state="normal" if idx < total - 1 else "disabled")
+
+    def _on_scrub(self, _event=None):
+        idx = self._scrubber_var.get()
+        if idx == self._chapter_idx:
+            return
+        self._stop()
+        self._chapter_idx = idx
+        self._load_chapter(idx)
+        self._save_progress()
 
     def _on_chapter_selected(self, _event=None):
         idx = self._chapter_box.current()
