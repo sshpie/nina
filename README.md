@@ -111,5 +111,5 @@ For browsers without extension support, copy `bookmarklet.txt` and save it as a 
 
 ## How it works
 
-I just took the Microsoft Edge browser's read aloud voice API :)
+Nina uses `edge-tts`, an open source Python library that streams neural speech synthesis audio. The library sends text to a publicly accessible TTS endpoint and returns an audio stream — no API key, no account, no browser required. The browser extension uses the Web Speech API built into Chromium browsers for in-page reading.
 

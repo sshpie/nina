@@ -29,6 +29,111 @@ LIBRARY_DIR   = Path.home() / "VDT" / "books"
 
 
 # ── Library window ────────────────────────────────────────────────────────────
+# ── Bookmark bar (vertical chapter tabs on text right edge) ──────────────────
+class BookmarkBar(tk.Canvas):
+    """
+    Vertical strip of stacked chapter tabs on the right edge of the text area.
+    Each chapter gets a tab shaped like a metal page-marker (rectangle body,
+    triangular point to the left). Current chapter highlighted in ACCENT.
+    Click any tab to jump to that chapter.
+    """
+    W = 22   # canvas width in pixels
+    MARGIN = 8
+
+    def __init__(self, parent, on_seek):
+        super().__init__(parent, width=self.W, bg=BG,
+                         highlightthickness=0, cursor="hand2")
+        self._on_seek  = on_seek
+        self._total    = 0
+        self._current  = 0
+        self._hover    = None
+
+        self.bind("<Configure>",       lambda e: self._draw())
+        self.bind("<Motion>",          self._on_motion)
+        self.bind("<Leave>",           self._on_leave)
+        self.bind("<ButtonRelease-1>", self._on_click)
+
+    # ── Public API ────────────────────────────────────────────────────────────
+    def set_chapters(self, current: int, total: int):
+        self._current = current
+        self._total   = total
+        self._hover   = None
+        self._draw()
+
+    def clear(self):
+        self._total   = 0
+        self._current = 0
+        self._hover   = None
+        self.delete("all")
+
+    # ── Drawing ───────────────────────────────────────────────────────────────
+    def _y_for(self, idx):
+        h  = max(1, self.winfo_height())
+        t  = max(1, self._total - 1)
+        return self.MARGIN + idx / t * (h - 2 * self.MARGIN)
+
+    def _idx_for(self, y):
+        h  = max(1, self.winfo_height())
+        t  = max(1, self._total - 1)
+        frac = (y - self.MARGIN) / max(1, h - 2 * self.MARGIN)
+        return max(0, min(t, round(frac * t)))
+
+    def _draw(self):
+        self.delete("all")
+        if self._total < 1:
+            return
+
+        h  = self.winfo_height() or 400
+        W  = self.W
+
+        for i in range(self._total):
+            y   = self._y_for(i)
+            cur = (i == self._current)
+            hov = (i == self._hover)
+
+            if cur:
+                color, body_w = ACCENT, W
+                tip_x = 0              # point reaches left edge
+            elif hov:
+                color, body_w = FG2, W - 4
+                tip_x = 3
+            else:
+                color, body_w = BG3, W - 7
+                tip_x = 5
+
+            half = 5 if cur else 4
+
+            # Tab shape: right-anchored arrowhead pointing left
+            pts = [
+                tip_x, y,            # pointed tip (left)
+                W // 2, y - half,    # upper shoulder
+                W,      y - half,    # upper right
+                W,      y + half,    # lower right
+                W // 2, y + half,    # lower shoulder
+            ]
+            self.create_polygon(pts, fill=color, outline="", smooth=False)
+
+    # ── Events ────────────────────────────────────────────────────────────────
+    def _on_motion(self, event):
+        if self._total < 1:
+            return
+        idx = self._idx_for(event.y)
+        if idx != self._hover:
+            self._hover = idx
+            self._draw()
+
+    def _on_leave(self, _event):
+        if self._hover is not None:
+            self._hover = None
+            self._draw()
+
+    def _on_click(self, event):
+        if self._total < 1:
+            return
+        idx = self._idx_for(event.y)
+        self._on_seek(idx)
+
+
 class LibraryWindow(tk.Toplevel):
     """Scrollable panel listing all books in ~/chainsaw/books/."""
 
@@ -452,15 +557,15 @@ class NinaApp(tk.Tk):
         self._book_bar = tk.Frame(self, bg=BG2)
         # Not packed yet — shown by _show_book_bar()
 
-        # ── Row 1: title + chapter picker ─────────────────────────────────────
-        bar_top = tk.Frame(self._book_bar, bg=BG2)
-        bar_top.pack(fill="x", padx=10, pady=(6, 2))
+        # Single row: title + chapter picker
+        bar_row = tk.Frame(self._book_bar, bg=BG2)
+        bar_row.pack(fill="x", padx=10, pady=(6, 6))
 
-        self._book_title_lbl = tk.Label(bar_top, text="", bg=BG2, fg=ACCENT,
+        self._book_title_lbl = tk.Label(bar_row, text="", bg=BG2, fg=ACCENT,
                                          font=(*FONT[:1], 10, "bold"), anchor="w")
         self._book_title_lbl.pack(side="left")
 
-        nav_frame = tk.Frame(bar_top, bg=BG2)
+        nav_frame = tk.Frame(bar_row, bg=BG2)
         nav_frame.pack(side="right")
 
         self._prev_ch_btn = tk.Button(nav_frame, text="◀", command=self._prev_chapter,
@@ -481,26 +586,6 @@ class NinaApp(tk.Tk):
                                        font=FONT, padx=6, pady=2, cursor="hand2")
         self._next_ch_btn.pack(side="left")
 
-        # ── Row 2: scrubber (bookmark drag bar) ───────────────────────────────
-        bar_bot = tk.Frame(self._book_bar, bg=BG2)
-        bar_bot.pack(fill="x", padx=10, pady=(0, 6))
-
-        self._scrubber_var = tk.IntVar(value=0)
-        self._scrubber = tk.Scale(
-            bar_bot, variable=self._scrubber_var, orient="horizontal",
-            from_=0, to=1, showvalue=False,
-            bg=BG2, fg=FG2, troughcolor=BG3, activebackground=ACCENT,
-            highlightthickness=0, bd=0, sliderlength=14, width=6,
-            cursor="hand2",
-        )
-        self._scrubber.pack(side="left", fill="x", expand=True, padx=(0, 8))
-        # Load chapter on release so dragging doesn't thrash the text area
-        self._scrubber.bind("<ButtonRelease-1>", self._on_scrub)
-
-        self._scrub_lbl = tk.Label(bar_bot, text="", bg=BG2, fg=FG2,
-                                    font=(*FONT[:1], 9), anchor="w", width=28)
-        self._scrub_lbl.pack(side="left")
-
         # ── Button row ────────────────────────────────────────────────────────
         self._btn_row = ttk.Frame(self)
         self._btn_row.pack(fill="x", padx=16, pady=(6, 6))
@@ -514,9 +599,16 @@ class NinaApp(tk.Tk):
         self._chunk_lbl = ttk.Label(self._btn_row, text="", style="Status.TLabel")
         self._chunk_lbl.pack(side="right")
 
-        # ── Text area ─────────────────────────────────────────────────────────
+        # ── Text area + vertical bookmark tabs ────────────────────────────────
         self._text_frame = ttk.Frame(self)
         self._text_frame.pack(fill="both", expand=True, padx=16, pady=(0, 6))
+
+        # Bookmark bar — packed first so it's the rightmost element
+        self._bm_bar = BookmarkBar(self._text_frame, on_seek=self._on_scrub)
+        self._bm_bar.pack(side="right", fill="y", padx=(2, 0))
+
+        scrollbar = tk.Scrollbar(self._text_frame, command=None,
+                                  bg=BG3, troughcolor=BG, relief="flat")
 
         self._text = tk.Text(
             self._text_frame, bg=BG2, fg=FG, insertbackground=FG,
@@ -527,8 +619,8 @@ class NinaApp(tk.Tk):
         self._text.insert("1.0", "Paste or type text here, or click 📚 Open Book.")
         self._text.bind("<FocusIn>", self._clear_placeholder)
 
-        scrollbar = tk.Scrollbar(self._text_frame, command=self._text.yview,
-                                  bg=BG3, troughcolor=BG, relief="flat")
+        scrollbar.config(command=self._text.yview)
+        scrollbar.pack(side="right", fill="y")
         scrollbar.pack(side="right", fill="y")
         self._text.config(yscrollcommand=scrollbar.set)
 
@@ -568,11 +660,10 @@ class NinaApp(tk.Tk):
         saved = self._progress.get(path, 0)
         self._chapter_idx   = min(saved, len(chapters) - 1)
 
-        # Populate chapter combobox and scrubber range
+        # Populate chapter combobox
         titles = [f"{i+1}. {t}" for i, (t, _) in enumerate(chapters)]
         self._chapter_box["values"] = titles
         self._chapter_var.set(titles[self._chapter_idx])
-        self._scrubber.config(to=max(1, len(chapters) - 1))
 
         short = Path(path).stem[:50]
         self._book_title_lbl.config(text=f"📖  {short}")
@@ -594,18 +685,12 @@ class NinaApp(tk.Tk):
         if titles:
             self._chapter_var.set(titles[idx])
 
-        # Sync scrubber without triggering its callback
-        self._scrubber.config(command="")
-        self._scrubber_var.set(idx)
-        self._scrubber.config(command=lambda v: None)
-
-        self._scrub_lbl.config(text=f"{idx+1}/{total}  {title[:26]}")
+        self._bm_bar.set_chapters(idx, total)
         self._chunk_lbl.config(text=f"ch {idx+1}/{total}")
         self._prev_ch_btn.config(state="normal" if idx > 0 else "disabled")
         self._next_ch_btn.config(state="normal" if idx < total - 1 else "disabled")
 
-    def _on_scrub(self, _event=None):
-        idx = self._scrubber_var.get()
+    def _on_scrub(self, idx: int):
         if idx == self._chapter_idx:
             return
         self._stop()
@@ -783,6 +868,7 @@ class NinaApp(tk.Tk):
         self._book_chapters = []
         self._book_path     = None
         self._hide_book_bar()
+        self._bm_bar.clear()
         self._text.delete("1.0", "end")
         self._text.insert("1.0", "Paste or type text here, or click 📚 Open Book.")
         self._chunk_lbl.config(text="")

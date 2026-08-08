@@ -134,16 +134,15 @@
 
   // ── Voice loading ──────────────────────────────────────────────────────────
   function populateVoices() {
-    const all = speechSynthesis.getVoices();
-    const ms  = all.filter(v => v.name.includes('Microsoft'));
-    allVoices  = ms.length ? ms : all;
+    allVoices = speechSynthesis.getVoices().filter(v => v.lang.startsWith('en'));
+    if (!allVoices.length) allVoices = speechSynthesis.getVoices();
 
     voiceSel.innerHTML = '';
     allVoices.forEach((v, i) => {
       const display = v.name
-        .replace('Microsoft ', '')
-        .replace(' Online', '')
-        .replace(' (Natural)', '')
+        .replace(/^Microsoft /, '')
+        .replace(/ Online$/, '')
+        .replace(/ \(Natural\)$/, '')
         .replace(/ - .+/, '');
       voiceSel.add(new Option(display, i));
     });
@@ -253,7 +252,7 @@
   chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     if (msg.action === 'getVoices') {
       const names = allVoices.map(v =>
-        v.name.replace('Microsoft ', '').replace(' Online', '').replace(' (Natural)', '').replace(/ - .+/, '')
+        v.name.replace(/^Microsoft /, '').replace(/ Online$/, '').replace(/ \(Natural\)$/, '').replace(/ - .+/, '')
       );
       sendResponse({ voices: names });
     }

@@ -42,15 +42,15 @@
   const chunks = rawText.match(/[^.!?\n]{1,400}(?:[.!?\n]+|$)/g) || [rawText];
   let idx = 0;
   let playing = false;
-  let msVoices = [];
+  let voices = [];
   const _prevPadding = document.body.style.paddingTop;
 
   // ── Voice loading ────────────────────────────────────────────────────────
   function loadVoices() {
     const all = speechSynthesis.getVoices();
-    msVoices = all.filter(v => v.name.includes('Microsoft'));
-    if (!msVoices.length) msVoices = all;
-    return msVoices;
+    voices = all.filter(v => v.lang.startsWith('en'));
+    if (!voices.length) voices = all;
+    return voices;
   }
 
   // ── UI ───────────────────────────────────────────────────────────────────
@@ -121,10 +121,10 @@
     voiceSel.innerHTML = '';
     mv.forEach((v, i) => {
       const label = v.name
-        .replace('Microsoft ', '')
-        .replace(' Online', '')
-        .replace(' (Natural)', '')
-        .replace(' - ', ' · ');
+        .replace(/^Microsoft /, '')
+        .replace(/ Online$/, '')
+        .replace(/ \(Natural\)$/, '')
+        .replace(/ - /, ' · ');
       voiceSel.add(new Option(label, i));
     });
   }
@@ -135,7 +135,7 @@
   function speak() {
     if (idx >= chunks.length) { stop(); return; }
     const utt = new SpeechSynthesisUtterance(chunks[idx]);
-    utt.voice = msVoices[parseInt(voiceSel.value)] || msVoices[0];
+    utt.voice = voices[parseInt(voiceSel.value)] || voices[0];
     utt.rate  = parseFloat(speedSel.value);
     utt.onend   = () => { idx++; updateProg(); if (playing) speak(); };
     utt.onerror = () => { idx++; if (playing) speak(); };
