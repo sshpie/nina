@@ -1,0 +1,84 @@
+#nina-ext-bar {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  z-index: 2147483647 !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  padding: 6px 14px !important;
+  background: #0f0f1e !important;
+  border-bottom: 2px solid #2a2a6a !important;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.6) !important;
+  font-family: system-ui, -apple-system, sans-serif !important;
+  font-size: 13px !important;
+  color: #dde0ff !important;
+  box-sizing: border-box !important;
+  height: 44px !important;
+}
+
+.nina-label {
+  color: #4a7aff !important;
+  font-weight: 700 !important;
+  font-size: 11px !important;
+  letter-spacing: 1.5px !important;
+  margin-right: 4px !important;
+  flex-shrink: 0 !important;
+}
+
+.nina-btn {
+  background: #1e1e4a !important;
+  color: #dde0ff !important;
+  border: 1px solid #333366 !important;
+  border-radius: 4px !important;
+  padding: 3px 10px !important;
+  font-size: 13px !important;
+  cursor: pointer !important;
+  line-height: 1.4 !important;
+  transition: background 0.1s !important;
+  font-family: inherit !important;
+}
+
+.nina-btn:hover {
+  background: #2d2d6a !important;
+}
+
+.nina-select {
+  background: #1e1e4a !important;
+  color: #dde0ff !important;
+  border: 1px solid #333366 !important;
+  border-radius: 4px !important;
+  padding: 3px 6px !important;
+  font-size: 12px !important;
+  cursor: pointer !important;
+  font-family: inherit !important;
+}
+
+.nina-voice-sel {
+  max-width: 200px !important;
+}
+
+.nina-prog {
+  font-size: 11px !important;
+  color: #6677aa !important;
+  min-width: 55px !important;
+  flex-shrink: 0 !important;
+}
+
+.nina-close {
+  margin-left: auto !important;
+  color: #ff7777 !important;
+  border-color: #442233 !important;
+  background: #1e1020 !important;
+}
+
+.nina-close:hover {
+  background: #2d1530 !important;
+}
+
+.nina-hl {
+  background: rgba(74, 122, 255, 0.25) !important;
+  border-radius: 2px !important;
+  padding: 0 1px !important;
+}

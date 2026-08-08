@@ -1,0 +1,80 @@
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  width: 280px;
+  background: #0f0f1e;
+  color: #dde0ff;
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 13px;
+}
+
+.header {
+  padding: 14px 16px 10px;
+  border-bottom: 1px solid #1e1e40;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.title {
+  color: #4a7aff;
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: 2px;
+}
+
+.sub {
+  color: #556;
+  font-size: 11px;
+}
+
+.section {
+  padding: 10px 16px;
+  border-bottom: 1px solid #151528;
+}
+
+.section label {
+  display: block;
+  color: #778;
+  font-size: 11px;
+  margin-bottom: 5px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.section select {
+  width: 100%;
+  background: #1a1a30;
+  color: #dde0ff;
+  border: 1px solid #2a2a50;
+  border-radius: 4px;
+  padding: 5px 8px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.row {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-primary {
+  flex: 1;
+  background: #4a7aff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 12px;
+  font-size: 13px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.btn-primary:hover { background: #5a8aff; }
+
+.footer {
+  padding: 8px 16px;
+  color: #445;
+  font-size: 11px;
+  text-align: center;
+}

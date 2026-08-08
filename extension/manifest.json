@@ -1,0 +1,30 @@
+{
+  "manifest_version": 3,
+  "name": "Nina",
+  "version": "1.0.0",
+  "description": "Read any webpage aloud with Microsoft neural voices.",
+  "permissions": ["storage", "activeTab", "scripting"],
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_icon": {
+      "16":  "icons/icon16.png",
+      "48":  "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "content_scripts": [{
+    "matches": ["<all_urls>"],
+    "js":  ["content/content.js"],
+    "css": ["content/content.css"],
+    "run_at": "document_idle"
+  }],
+  "background": {
+    "service_worker": "background/service_worker.js"
+  },
+  "commands": {
+    "toggle-nina": {
+      "suggested_key": { "default": "Ctrl+Shift+U" },
+      "description": "Toggle Nina Read Aloud"
+    }
+  }
+}
