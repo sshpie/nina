@@ -879,7 +879,14 @@ class NinaApp(tk.Tk):
 
 
 def main():
+    import argparse
+    p = argparse.ArgumentParser(prog="nina-gui")
+    p.add_argument("--book", metavar="PATH", help="Pre-load a book on startup")
+    args = p.parse_args()
+
     app = NinaApp()
+    if args.book:
+        app.after(200, lambda: app._open_book_path(args.book))
     app.mainloop()
 
 
