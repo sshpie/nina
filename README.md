@@ -50,22 +50,22 @@ nina --list
 
 ### Voice shortcuts
 
-| Shortcut | Voice | Style |
-|----------|-------|-------|
-| `aria` | en-US-AriaNeural | News, clear |
-| `guy` | en-US-GuyNeural | News, authoritative |
-| `jenny` | en-US-JennyNeural | Conversation |
-| `alex` | en-US-AndrewNeural | Warm, confident |
-| `ava` | en-US-AvaNeural | Expressive |
-| `brian` | en-US-BrianNeural | Casual |
-| `emma` | en-US-EmmaNeural | Conversational |
-| `libby` | en-GB-LibbyNeural | British |
-| `ryan` | en-GB-RyanNeural | British male |
-| `sonia` | en-GB-SoniaNeural | British female |
-| `natasha` | en-AU-NatashaNeural | Australian |
-| `william` | en-AU-WilliamNeural | Australian male |
-| `connor` | en-IE-ConnorNeural | Irish male |
-| `helen` | en-IE-EmilyNeural (default) | Irish female |
+| Shortcut | Locale | Style |
+|----------|--------|-------|
+| `aria` | en-US | News, clear |
+| `guy` | en-US | News, authoritative |
+| `jenny` | en-US | Conversation |
+| `alex` | en-US | Warm, confident |
+| `ava` | en-US | Expressive |
+| `brian` | en-US | Casual |
+| `emma` | en-US | Conversational |
+| `libby` | en-GB | British female |
+| `ryan` | en-GB | British male |
+| `sonia` | en-GB | British female |
+| `natasha` | en-AU | Australian female |
+| `william` | en-AU | Australian male |
+| `connor` | en-IE | Irish male |
+| `helen` | en-IE | Irish female (default) |
 
 Full voice IDs also work: `nina -v en-US-BrianMultilingualNeural "..."` — run `nina --list` to see all 47 English voices.
 
