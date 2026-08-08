@@ -55,7 +55,7 @@ nina --list
 | `aria` | en-US-AriaNeural | News, clear |
 | `guy` | en-US-GuyNeural | News, authoritative |
 | `jenny` | en-US-JennyNeural | Conversation |
-| `andrew` | en-US-AndrewNeural | Warm, confident |
+| `alex` | en-US-AndrewNeural | Warm, confident |
 | `ava` | en-US-AvaNeural | Expressive |
 | `brian` | en-US-BrianNeural | Casual |
 | `emma` | en-US-EmmaNeural | Conversational |

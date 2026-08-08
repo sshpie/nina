@@ -18,7 +18,7 @@ VOICE_SHORTCUTS = {
     "william": "en-AU-WilliamNeural",
     "connor":  "en-IE-ConnorNeural",
     "helen":   "en-IE-EmilyNeural",
-    "andrew":  "en-US-AndrewNeural",
+    "alex":    "en-US-AndrewNeural",
     "ava":     "en-US-AvaNeural",
     "brian":   "en-US-BrianNeural",
     "emma":    "en-US-EmmaNeural",
