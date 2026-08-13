@@ -1,5 +1,5 @@
 (function () {
-  const ID = 'nuclide-read-aloud';
+  const ID = 'nina-read-aloud';
 
   // Toggle off if already running
   if (document.getElementById(ID)) {
