@@ -1,4 +1,4 @@
-(() => {
+(async () => {
   const ID      = 'nina-ext-bar';
   const STORE   = 'nina_prefs';
   const ACCENT  = '#4a7aff';
@@ -13,6 +13,22 @@
 
   // ── Text extraction ────────────────────────────────────────────────────────
   function extractText() {
+    // O'Reilly Learning detection and handling
+    if (window.location.hostname.includes('oreilly.com')) {
+      const main = document.querySelector('main');
+      if (main) {
+        // O'Reilly renders content in main, but need to wait for it
+        const text = main.innerText.trim();
+        if (text.length > 200) {
+          return text.replace(/\n{3,}/g, '\n\n');
+        }
+      }
+      // If main exists but has no content yet, return empty to trigger retry
+      if (main && main.innerText.trim().length === 0) {
+        return '';
+      }
+    }
+
     const selectors = [
       'article', '[role="main"]', 'main',
       '#mw-content-text',        // Wikipedia
@@ -34,6 +50,20 @@
     return document.body.innerText.trim().substring(0, 50000);
   }
 
+  // Wait for content to be ready (handles dynamically rendered pages like O'Reilly)
+  async function waitForContent(maxRetries = 5) {
+    for (let i = 0; i < maxRetries; i++) {
+      const text = extractText();
+      if (text && text.length > 200) {
+        return text;
+      }
+      // Wait progressively longer between retries
+      await new Promise(resolve => setTimeout(resolve, 500 * (i + 1)));
+    }
+    // Final attempt - return whatever we have
+    return extractText() || document.body.innerText.trim().substring(0, 50000);
+  }
+
   // Split on paragraph breaks and sentence boundaries
   function toChunks(text) {
     const paras = text.split(/\n\n+/).filter(p => p.trim().length > 0);
@@ -47,7 +77,8 @@
   }
 
   // ── State ──────────────────────────────────────────────────────────────────
-  const chunks  = toChunks(extractText());
+  const text    = await waitForContent();
+  const chunks  = toChunks(text);
   let idx       = 0;
   let playing   = false;
   let paused    = false;
@@ -75,6 +106,18 @@
   // ── Build bar ─────────────────────────────────────────────────────────────
   const bar = document.createElement('div');
   bar.id    = ID;
+
+  // Show loading state if no chunks yet
+  if (chunks.length === 0) {
+    bar.className = 'nina-loading';
+    const loadMsg = document.createElement('span');
+    loadMsg.className = 'nina-label';
+    loadMsg.textContent = 'NINA - Loading content...';
+    bar.append(loadMsg);
+    document.body.prepend(bar);
+    document.documentElement.style.marginTop = '44px';
+    return;
+  }
 
   // Controls
   const makeBtn = (label, title, fn) => {

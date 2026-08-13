@@ -11,6 +11,14 @@
 
   // ── Text extraction ──────────────────────────────────────────────────────
   function extractText() {
+    // O'Reilly Learning: use main directly
+    if (window.location.hostname.includes('oreilly.com')) {
+      const main = document.querySelector('main');
+      if (main && main.innerText.trim().length > 200) {
+        return main.innerText.replace(/\n{3,}/g, '\n\n').trim();
+      }
+    }
+
     const selectors = [
       'article',
       '[role="main"]',
@@ -38,6 +46,12 @@
 
   // ── State ────────────────────────────────────────────────────────────────
   const rawText = extractText();
+
+  // O'Reilly: Show warning if no content found
+  if (window.location.hostname.includes('oreilly.com') && rawText.length < 200) {
+    alert('Nina: Waiting for O\'Reilly content to load. Please wait for the chapter to appear, then click the bookmark again.');
+    return;
+  }
   // Split on sentence boundaries, keep chunks ≤400 chars
   const chunks = rawText.match(/[^.!?\n]{1,400}(?:[.!?\n]+|$)/g) || [rawText];
   let idx = 0;

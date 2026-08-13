@@ -112,6 +112,10 @@ The floating bar shows:
 - Speed selector (0.75× – 2×)
 - Chunk progress counter
 
+### O'Reilly Learning support
+
+The extension automatically detects O'Reilly Learning pages and waits for the JavaScript-rendered content to load before extracting text. If you see "NINA - Loading content..." for more than a few seconds, the page may not have loaded yet — wait for the chapter content to appear in the browser, then try activating Nina again.
+
 ---
 
 ## Bookmarklet

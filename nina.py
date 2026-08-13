@@ -49,8 +49,8 @@ async def save_audio(text: str, voice_id: str, rate: str, path: str) -> None:
 
 async def resolve_voice(name: str) -> str:
     """Resolve a shortcut or prefix to a full voice ID."""
-    if name in VOICES:
-        return VOICES[name]
+    if name in VOICE_SHORTCUTS:
+        return VOICE_SHORTCUTS[name]
     if "Neural" in name:
         return name
     # Prefix match against full list
@@ -74,7 +74,7 @@ async def main() -> None:
     p.add_argument("text", nargs="*", help="Text to read (omit to read from stdin)")
     p.add_argument(
         "-v", "--voice", default="helen", metavar="NAME",
-        help=f"Voice shortcut or full ID. Shortcuts: {', '.join(VOICES)}. Default: helen",
+        help=f"Voice shortcut or full ID. Shortcuts: {', '.join(VOICE_SHORTCUTS)}. Default: helen",
     )
     p.add_argument(
         "-r", "--rate", default="+0%", metavar="RATE",
