@@ -15,7 +15,7 @@ Nina delivers high-quality, natural-sounding voices on Linux through a CLI, a de
 ```bash
 sudo apt install mpv
 
-git clone https://github.com/zellkernel/nina
+git clone https://github.com/sshpie/nina
 cd nina
 pip install -r requirements.txt
 chmod +x nina.py
